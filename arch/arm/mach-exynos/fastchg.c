@@ -22,7 +22,7 @@
  *
  *   0 - disabled (default)
  *   1 - substitute AC to USB
- *   2 - use custom mA set through sysfs interface (see below)
+ *   2 - use custom mA configured through sysfs interface (see below)
  *
  * /sys/kernel/fast_charge/ac_charge_level (rw)
  *
@@ -30,7 +30,7 @@
  *
  * /sys/kernel/fast_charge/usb_charge_level (r/w)
  *
- *   rate at which to charge when on USB (0.5A to 1.0A)
+ *   rate at which to charge when on USB (0.475A to 1.0A)
  *
  * /sys/kernel/fast_charge/failsafe (rw)
  *
@@ -55,7 +55,7 @@ static ssize_t force_fast_charge_show(struct kobject *kobj, struct kobj_attribut
 	switch (force_fast_charge) {
 		case FAST_CHARGE_DISABLED:		return sprintf(buf, "0 - Disabled (default)\n");
 		case FAST_CHARGE_FORCE_AC:		return sprintf(buf, "1 - Use stock AC level on USB\n");
-		case FAST_CHARGE_FORCE_CUSTOM_MA:	return sprintf(buf, "2 - Use custom mA on AC (%du) and USB (%du)\n",ac_charge_level,usb_charge_level);
+		case FAST_CHARGE_FORCE_CUSTOM_MA:	return sprintf(buf, "2 - Use custom mA on AC (%dmA) and USB (%dmA)\n",ac_charge_level,usb_charge_level);
 		default:				return sprintf(buf, "something went wrong\n");
 	}
 }

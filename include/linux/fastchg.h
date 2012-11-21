@@ -1,5 +1,5 @@
 /*
- * Author: Chad Froebel <chadfroebel@gmail.com>*
+ * Author: Chad Froebel <chadfroebel@gmail.com>
  *
  * Ported to SGS3 and extended : Jean-Pierre Rasquin <yank555.lu@gmail.com>
  *
