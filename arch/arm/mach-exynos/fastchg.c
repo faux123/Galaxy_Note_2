@@ -15,8 +15,8 @@
  */
 
 /*
- * Forced Fast Charge v1.2a - SysFS interface :
- * --------------------------------------------
+ * Forced Fast Charge - SysFS interface :
+ * --------------------------------------
  *
  * /sys/kernel/fast_charge/force_fast_charge (rw)
  *
@@ -250,7 +250,7 @@ static struct attribute_group failsafe_attr_group = {
 /* sysfs interface for "version" */
 static ssize_t version_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
-	return sprintf(buf, "Forced Fast Charge by Yank555.lu v1.2a\n");
+	return sprintf(buf, FAST_CHARGE_VERSION);
 }
 
 static ssize_t version_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count)
