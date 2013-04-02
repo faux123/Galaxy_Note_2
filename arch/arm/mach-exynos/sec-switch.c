@@ -335,6 +335,10 @@ void max77693_muic_usb_cb(u8 usb_mode)
 			host_noti_pdata->powered_booster(1);
 #endif
 #ifdef CONFIG_USB_EHCI_S5P
+#if defined(CONFIG_MACH_T0_CHN_CTC) || \
+	defined(CONFIG_MACH_T0_CHN_CMCC)	
+		msleep(40);
+#endif
 		pm_runtime_get_sync(&s5p_device_ehci.dev);
 #endif
 #ifdef CONFIG_USB_OHCI_S5P

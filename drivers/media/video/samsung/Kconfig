@@ -23,6 +23,8 @@ endif
 if (CPU_EXYNOS4210 || CPU_EXYNOS4212 || CPU_EXYNOS4412) && !SLP
 	source "drivers/media/video/samsung/mali/Kconfig"
 endif
+if SLP
+endif
 
 config VIDEO_FIMG2D
 	bool

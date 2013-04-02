@@ -126,6 +126,9 @@ struct mdm_hsic_pm_data {
 /* indicate wakeup from lpa state */
 bool lpa_handling;
 
+/* indicate receive hallo_packet_rx */
+int hello_packet_rx;
+
 #ifdef EHCI_REG_DUMP
 struct dump_ehci_regs {
 	unsigned caps_hc_capbase;
@@ -346,6 +349,8 @@ void request_autopm_lock(int status)
 			pm_runtime_allow(&pm_data->udev->dev);
 			pm_runtime_put(&pm_data->udev->dev);
 		}
+		/* initailize hello_packet_rx */
+		hello_packet_rx = 0;
 	}
 }
 
@@ -363,6 +368,7 @@ void request_active_lock_release(const char *name)
 	pr_info("%s\n", __func__);
 	if (pm_data)
 		wake_unlock(&pm_data->l2_wake);
+
 }
 
 void request_boot_lock_set(const char *name)

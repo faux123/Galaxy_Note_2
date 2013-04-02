@@ -281,11 +281,14 @@ enum status_full_type {
 #define DOCK_TYPE_LOW_CURR		475
 
 /* voltage diff for recharge voltage calculation */
-#if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)
-/* KOR model spec : max-voltage minus 60mV */
+#if defined(CONFIG_TARGET_LOCALE_USA) || \
+	defined(CONFIG_TARGET_LOCALE_KOR) || \
+	defined(CONFIG_MACH_M0_CTC) || \
+	defined(CONFIG_MACH_T0_CHN_CTC)
+/* CDMA model spec : max-voltage minus 60mV */
 #define RECHG_DROP_VALUE	60000
 #else
-#define RECHG_DROP_VALUE	50000	/* 4300mV */
+#define RECHG_DROP_VALUE	50000
 #endif
 
 /* power off condition, low %duV than VOLTAGE_MIN_DESIGN & SOC 0% */

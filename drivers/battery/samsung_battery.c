@@ -2039,6 +2039,9 @@ static int samsung_usb_get_property(struct power_supply *ps,
 	if (psp != POWER_SUPPLY_PROP_ONLINE)
 		return -EINVAL;
 
+	/* re-update indicator icon */
+	battery_indicator_icon(info);
+
 	/* Set enable=1 only if the USB charger is connected */
 	val->intval = ((info->charge_virt_state !=
 				POWER_SUPPLY_STATUS_DISCHARGING) &&
@@ -2059,6 +2062,9 @@ static int samsung_ac_get_property(struct power_supply *ps,
 
 	if (psp != POWER_SUPPLY_PROP_ONLINE)
 		return -EINVAL;
+
+	/* re-update indicator icon */
+	battery_indicator_icon(info);
 
 	/* Set enable=1 only if the AC charger is connected */
 	val->intval = ((info->charge_virt_state !=

@@ -382,7 +382,7 @@ extern void powered_otg_control(int);
 extern int max77693_muic_set_audio_switch(bool enable);
 
 #ifdef CONFIG_MFD_MAX77693
-enum cable_type_muic {
+typedef enum cable_type_muic {
 	CABLE_TYPE_NONE_MUIC = 0,
 	CABLE_TYPE_USB_MUIC,
 	CABLE_TYPE_OTG_MUIC,
@@ -404,7 +404,7 @@ enum cable_type_muic {
 	CABLE_TYPE_EARJACK_MUIC,
 #endif
 	CABLE_TYPE_UNKNOWN_MUIC
-};
+} cable_type_t;
 
 enum {
 	AP_USB_MODE = 0,
@@ -413,7 +413,7 @@ enum {
 #if defined(CONFIG_SWITCH_DUAL_MODEM)
 	CP_ESC_USB_MODE,
 #endif
-
+	OPEN_USB_MODE
 };
 
 enum {

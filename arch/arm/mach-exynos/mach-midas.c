@@ -391,17 +391,17 @@ static int touchkey_power_on(bool on)
 
 	if (on) {
 		gpio_direction_output(GPIO_3_TOUCH_INT, 1);
+
+		ret = touchkey_resume();
+
 		irq_set_irq_type(gpio_to_irq(GPIO_3_TOUCH_INT),
 			IRQF_TRIGGER_FALLING);
 		s3c_gpio_cfgpin(GPIO_3_TOUCH_INT, S3C_GPIO_SFN(0xf));
 		s3c_gpio_setpull(GPIO_3_TOUCH_INT, S3C_GPIO_PULL_NONE);
-	} else
+	} else {
 		gpio_direction_input(GPIO_3_TOUCH_INT);
-
-	if (on)
-		ret = touchkey_resume();
-	else
 		ret = touchkey_suspend();
+	}
 
 	return ret;
 }
@@ -659,9 +659,15 @@ static int __init isdbt_dev_init(void)
 #if defined(CONFIG_MACH_T0_JPN_LTE_DCM) && defined(CONFIG_ISDBT_ANT_DET)
 	unsigned int isdbt_ant_det_gpio;
 	unsigned int isdbt_ant_det_irq;
+         if (system_rev > 11) {
+                isdbt_ant_det_gpio = GPIO_ISDBT_ANT_DET_REV08;
+                isdbt_ant_det_irq = GPIO_ISDBT_IRQ_ANT_DET_REV08;
+        } else {
 	s5p_register_gpio_interrupt(GPIO_ISDBT_ANT_DET);
 	isdbt_ant_det_gpio = GPIO_ISDBT_ANT_DET;
 	isdbt_ant_det_irq = GPIO_ISDBT_IRQ_ANT_DET;
+        }
+
 	s3c_gpio_cfgpin(isdbt_ant_det_gpio, S3C_GPIO_SFN(0xf));
 	s3c_gpio_setpull(isdbt_ant_det_gpio, S3C_GPIO_PULL_NONE);
 	isdbt_pdata.gpio_ant_det = isdbt_ant_det_gpio;
@@ -970,7 +976,8 @@ static void motor_en(bool enable)
 	       gpio_get_value(EXYNOS4_GPD0(0)));
 }
 #endif
-#if defined(CONFIG_MACH_T0) && defined(CONFIG_TARGET_LOCALE_KOR)
+#if defined(CONFIG_MACH_T0) && defined(CONFIG_TARGET_LOCALE_KOR) || \
+	defined(CONFIG_MACH_T0_JPN_LTE_DCM)
 static void motor_en(bool enable)
 {
 	gpio_direction_output(EXYNOS4_GPC0(3), enable);
@@ -1146,7 +1153,7 @@ static struct i2c_board_info i2c_devs5[] __initdata = {
 		I2C_BOARD_INFO("s5p_ddc", (0x74 >> 1)),
 	},
 };
-#elif !defined(CONFIG_MACH_T0_EUR_OPEN) || !defined(CONFIG_MACH_T0_CHN_OPEN)
+#elif !defined(CONFIG_MACH_T0_EUR_OPEN) && !defined(CONFIG_MACH_T0_CHN_OPEN)
 static struct i2c_board_info i2c_devs5[] __initdata = {
 #ifdef CONFIG_REGULATOR_MAX8997
 	{
@@ -3134,6 +3141,10 @@ static void __init midas_machine_init(void)
 	if (system_rev >= 9)
 		max77693_haptic_pdata.motor_en = motor_en;
 #endif
+#if defined(CONFIG_MACH_T0_JPN_LTE_DCM)
+	if (system_rev >= 12)
+		max77693_haptic_pdata.motor_en = motor_en;
+#endif
 	i2c_register_board_info(17, i2c_devs17_emul,
 				ARRAY_SIZE(i2c_devs17_emul));
 #endif
@@ -3301,6 +3312,9 @@ static void __init midas_machine_init(void)
 #endif
 #ifdef CONFIG_SEC_THERMISTOR
 	platform_device_register(&sec_device_thermistor);
+#endif
+#ifdef CONFIG_SEC_SUBTHERMISTOR
+	platform_device_register(&sec_device_subthermistor);
 #endif
 #if defined(CONFIG_MACH_M0_CTC)
 	midas_gpiokeys_platform_data.buttons = m0_buttons;
