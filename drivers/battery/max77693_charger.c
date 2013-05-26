@@ -689,7 +689,8 @@ static int max77693_get_cable_type(struct max77693_charger_data *chg_data)
 	u8 dtls_01, chg_dtls;
 	u8 mu_st2, chgdetrun, vbvolt, chgtyp, dxovp;
 	bool wc_state;
-	bool retry_det, chg_det_erred;
+	bool retry_det;
+	bool chg_det_erred = false;
 	bool otg_detected = false;
 	int retry_cnt = 0;
 	pr_debug("%s\n", __func__);
