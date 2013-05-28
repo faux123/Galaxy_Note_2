@@ -38,6 +38,8 @@
 #include <mach/sec_debug.h>
 #endif
 
+#include "cpufreq_common.h"
+
 struct exynos_dvfs_info *exynos_info;
 
 static struct regulator *arm_regulator;

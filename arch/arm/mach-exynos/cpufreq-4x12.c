@@ -25,6 +25,7 @@
 
 #include <plat/clock.h>
 #include <plat/cpu.h>
+#include "cpufreq_common.h"
 
 #undef PRINT_DIV_VAL
 

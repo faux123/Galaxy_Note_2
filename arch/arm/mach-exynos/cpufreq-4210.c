@@ -23,8 +23,7 @@
 #include <mach/sec_debug.h>
 
 #include <plat/clock.h>
-
-#define CPUFREQ_LEVEL_END	L6
+#include "cpufreq_common.h"
 
 static int max_support_idx;
 static int min_support_idx = (CPUFREQ_LEVEL_END - 1);
