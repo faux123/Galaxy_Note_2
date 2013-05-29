@@ -24,6 +24,9 @@
 
 #define CPUFREQ_NAME_LEN 16
 
+#define SCALING_MAX_COUPLED	 1
+#define SCALING_MAX_UNDEFINED	 0
+#define SCALING_MAX_UNCOUPLED	-1
 
 /*********************************************************************
  *                     CPUFREQ NOTIFIER INTERFACE                    *
