@@ -84,4 +84,14 @@ GTAGS
 arch/arm/boot/compressed/ashldi3.S
 arch/arm/boot/compressed/piggy.xzkern
 
+#user stuff
+att-boot.img-ramdisk/
+boot.img-ramdisk/
+vzw-boot.img-ramdisk/
+att-jb-mkzip.sh
+jb-tw-mkzip.sh
+vzw-jb-mkzip.sh
+out/
+out_att/
+out_vzw/
 
