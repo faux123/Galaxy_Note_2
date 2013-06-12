@@ -143,7 +143,7 @@ static void notification_available_cb(struct urb *urb)
 
 	switch (urb->status) {
 	case 0:
-		pr_info("[NACB:%d]<\n", iface_num);
+		//pr_info("[NACB:%d]<\n", iface_num);
 		/*success*/
 		break;
 
@@ -185,8 +185,8 @@ static void notification_available_cb(struct urb *urb)
 			dev_err(dev->devicep,
 			"%s: Error submitting Read URB %d\n", __func__, status);
 			goto resubmit_int_urb;
-		} else
-			pr_info("[NRA:%d]>\n", iface_num);
+		} //else
+			//pr_info("[NRA:%d]>\n", iface_num);
 		usb_mark_last_busy(udev);
 
 		if (!dev->resp_available) {
@@ -231,7 +231,7 @@ static void resp_avail_cb(struct urb *urb)
 	case 0:
 		/*success*/
 		dev->get_encap_resp_cnt++;
-		pr_info("[RACB:%d]<\n", iface_num);
+		//pr_info("[RACB:%d]<\n", iface_num);
 		break;
 
 	/*do not resubmit*/
@@ -292,7 +292,7 @@ resubmit_int_urb:
 	if (status)
 		dev_err(dev->devicep, "%s: Error re-submitting Int URB %d\n",
 			__func__, status);
-	pr_info("[CHKRA:%d]>\n", iface_num);
+	//pr_info("[CHKRA:%d]>\n", iface_num);
 	usb_mark_last_busy(udev);
 }
 
@@ -309,8 +309,8 @@ static int rmnet_usb_ctrl_start_rx(struct rmnet_ctrl_dev *dev)
 	retval = usb_submit_urb(dev->inturb, GFP_KERNEL);
 	if (retval < 0)
 		dev_err(dev->devicep, "%s Intr submit %d\n", __func__, retval);
-	else
-		pr_info("[CHKRA:%d]>\n", iface_num);
+	//else
+		//pr_info("[CHKRA:%d]>\n", iface_num);
 
 	return retval;
 }
@@ -756,7 +756,7 @@ static ssize_t rmnet_ctl_write(struct file *file, const char __user * buf,
 		return size;
 
 	if (dev->tx_block) {
-		pr_info("%s: tx blocked by reset, just return\n", __func__);
+		//pr_info("%s: tx blocked by reset, just return\n", __func__);
 		return size;
 	}
 
@@ -881,7 +881,7 @@ static int rmnet_ctrl_reset_notifier(struct notifier_block *this,
 	struct rmnet_ctrl_dev *dev = container_of(this, struct rmnet_ctrl_dev,
 							reset_notifier_block);
 
-	pr_info("%s\n", __func__);
+	//pr_info("%s\n", __func__);
 
 	dev->tx_block = true;
 	usb_kill_anchored_urbs(&dev->tx_submitted);
@@ -929,7 +929,7 @@ int rmnet_usb_ctrl_probe(struct usb_interface *intf,
 
 	/* give margin before send DTR high */
 	msleep(20);
-	pr_info("%s: send DTR high to Modem\n", __func__);
+	//pr_info("%s: send DTR high to Modem\n", __func__);
 	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
 			USB_CDC_REQ_SET_CONTROL_LINE_STATE,
 			(USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE),
@@ -1207,7 +1207,7 @@ int rmnet_usb_ctrl_init(void)
 	}
 
 	rmnet_usb_ctrl_debugfs_init();
-	pr_info("rmnet usb ctrl Initialized.\n");
+	//pr_info("rmnet usb ctrl Initialized.\n");
 	return 0;
 
 error2:

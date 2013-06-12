@@ -30,8 +30,8 @@ static ssize_t ssp_sensorhub_write(struct file *file, const char __user *buf,
 		return -EINVAL;
 	}
 
-	for (i = 0; i < count; i++)
-		pr_info("%s[%d] = 0x%x", __func__, i, buf[i]);
+	//for (i = 0; i < count; i++)
+		//pr_info("%s[%d] = 0x%x", __func__, i, buf[i]);
 
 	if (buf[0] == MSG2SSP_INST_LIBRARY_REMOVE)
 		instruction = REMOVE_LIBRARY;
@@ -85,17 +85,17 @@ static long ssp_sensorhub_ioctl(struct file *file, unsigned int cmd,
 				goto exit;
 			}
 
-			for (i = 0; i < hub_data->first_event->length; i++) {
-				pr_info("%s[%d] = 0x%x", __func__, i,
-					hub_data->first_event->library_data[i]);
-			}
+			//for (i = 0; i < hub_data->first_event->length; i++) {
+			//	pr_info("%s[%d] = 0x%x", __func__, i,
+			//		hub_data->first_event->library_data[i]);
+			//}
 
 			hub_data->transfer_try = 0;
 			complete(&hub_data->transfer_done);
 
 		/* for receive_large_msg */
 		} else {
-			pr_info("%s: receive_large_msg ioctl", __func__);
+			//pr_info("%s: receive_large_msg ioctl", __func__);
 			ret = copy_to_user(argp, hub_data->large_library_data,
 				hub_data->large_library_length);
 			if (ret < 0) {
@@ -147,7 +147,7 @@ static void ssp_report_sensorhub_length(struct ssp_sensorhub_data *hub_data,
 {
 	input_report_rel(hub_data->sensorhub_input_dev, REL_RX, length);
 	input_sync(hub_data->sensorhub_input_dev);
-	pr_info("%s = %d", __func__, length);
+	//pr_info("%s = %d", __func__, length);
 }
 
 static int ssp_queue_sensorhub_events(struct ssp_sensorhub_data *hub_data,
@@ -172,7 +172,7 @@ static int ssp_queue_sensorhub_events(struct ssp_sensorhub_data *hub_data,
 
 	/* drop event if queue is full */
 	if (events >= LIBRARY_MAX_NUM) {
-		pr_info("%s: queue is full", __func__);
+		//pr_info("%s: queue is full", __func__);
 		hub_data->transfer_ready++;
 		return -ENOMEM;
 	}
@@ -192,8 +192,8 @@ static int ssp_queue_sensorhub_events(struct ssp_sensorhub_data *hub_data,
 	while (start < end) {
 		hub_data->events[event_number].library_data[i++]
 			= dataframe[start++];
-		pr_info("%s[%d] = 0x%x", __func__, i-1,
-			hub_data->events[event_number].library_data[i-1]);
+		//pr_info("%s[%d] = 0x%x", __func__, i-1,
+			//hub_data->events[event_number].library_data[i-1]);
 	}
 	hub_data->events[event_number].length = length;
 
@@ -208,7 +208,7 @@ static int ssp_queue_sensorhub_events(struct ssp_sensorhub_data *hub_data,
 	if (hub_data->event_number++ >= LIBRARY_MAX_NUM - 1)
 		hub_data->event_number = 0;
 
-	pr_info("%s: total %d events", __func__, events + 1);
+	//pr_info("%s: total %d events", __func__, events + 1);
 	return events;
 }
 
@@ -343,7 +343,7 @@ static int ssp_senosrhub_thread_func(void *arg)
 
 		/* exit thread if kthread should stop */
 		if (unlikely(kthread_should_stop())) {
-			pr_info("%s: kthread_stop()", __func__);
+			//pr_info("%s: kthread_stop()", __func__);
 			break;
 		}
 
@@ -402,7 +402,7 @@ static int ssp_senosrhub_thread_func(void *arg)
 				events++;
 			spin_unlock_bh(&hub_data->sensorhub_lock);
 
-			pr_info("%s: %d events remain", __func__, events);
+			//pr_info("%s: %d events remain", __func__, events);
 			continue;
 		}
 
@@ -413,7 +413,7 @@ static int ssp_senosrhub_thread_func(void *arg)
 		usleep_range(10000, 10000);
 	}
 
-	pr_info("%s: exit", __func__);
+	//pr_info("%s: exit", __func__);
 	return ret;
 }
 
