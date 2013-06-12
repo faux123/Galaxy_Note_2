@@ -535,8 +535,8 @@ static inline void fimc_irq_cap(struct fimc_control *ctrl)
 	static struct timeval curr_time, before_time;
 	if (!fimc_cam_use) {
 		do_gettimeofday(&curr_time);
-		printk(KERN_INFO "%s : time : %ld\n", __func__,
-				curr_time.tv_usec - before_time.tv_usec);
+		//printk(KERN_INFO "%s : time : %ld\n", __func__,
+		//		curr_time.tv_usec - before_time.tv_usec);
 		before_time.tv_usec = curr_time.tv_usec;
 	}
 #endif
@@ -556,14 +556,14 @@ static inline void fimc_irq_cap(struct fimc_control *ctrl)
 		}
 
 		if (cap->cnt < 20) {
-			printk(KERN_INFO "%s[%d], fimc%d, cnt[%d]\n", __func__,
-							pp, ctrl->id, cap->cnt);
+			//printk(KERN_INFO "%s[%d], fimc%d, cnt[%d]\n", __func__,
+			//				pp, ctrl->id, cap->cnt);
 			cap->cnt++;
 		}
 
 		fimc_info2("%s[%d]\n", __func__, pp);
 		if (pp == 0 || ctrl->restart) {
-			printk(KERN_INFO "%s[%d] SKIPPED\n", __func__, pp);
+			//printk(KERN_INFO "%s[%d] SKIPPED\n", __func__, pp);
 			if (ctrl->cap->nr_bufs == 1) {
 				fimc_stop_capture(ctrl);
 				ctrl->is_frame_end_irq = 1;
@@ -639,7 +639,7 @@ static inline void fimc_irq_cap(struct fimc_control *ctrl)
 				fimc_stop_capture(ctrl);
 				ctrl->is_frame_end_irq = 1;
 
-				printk(KERN_INFO "fimc_irq_cap available_bufnum = %d\n", available_bufnum);
+				//printk(KERN_INFO "fimc_irq_cap available_bufnum = %d\n", available_bufnum);
 				ctrl->status = FIMC_BUFFER_STOP;
 			}
 		} else {
@@ -670,8 +670,8 @@ static irqreturn_t fimc_irq(int irq, void *dev_id)
 	else if (ctrl->out)
 		fimc_irq_out(ctrl);
 	else {
-		printk(KERN_ERR "%s this message must not be shown!!!"
-				" fimc%d\n", __func__, (int)dev_id);
+		//printk(KERN_ERR "%s this message must not be shown!!!"
+				//" fimc%d\n", __func__, (int)dev_id);
 		pdata = to_fimc_plat(ctrl->dev);
 		pdata->clk_on(to_platform_device(ctrl->dev),
 					&ctrl->clk);
@@ -744,8 +744,8 @@ static struct fimc_control *fimc_register_controller(struct platform_device *pde
 #ifdef CONFIG_ION_EXYNOS
 	}
 #endif
-	printk(KERN_DEBUG "ctrl->mem.size = 0x%x\n", ctrl->mem.size);
-	printk(KERN_DEBUG "ctrl->mem.base = 0x%x\n", ctrl->mem.base);
+	//printk(KERN_DEBUG "ctrl->mem.size = 0x%x\n", ctrl->mem.size);
+	//printk(KERN_DEBUG "ctrl->mem.base = 0x%x\n", ctrl->mem.base);
 	ctrl->mem.curr = ctrl->mem.base;
 #endif
 	ctrl->status = FIMC_STREAMOFF;
@@ -1118,14 +1118,14 @@ static inline int _verify_planes_array(struct vb2_buffer *vb,
 				const struct v4l2_buffer *b)
 {
 	if (NULL == b->m.planes) {
-		printk(KERN_ERR "%s: Multi-planar buffer passwd but planes"
-			" array not provided\n", __func__);
+		//printk(KERN_ERR "%s: Multi-planar buffer passwd but planes"
+		//	" array not provided\n", __func__);
 		return -EINVAL;
 	}
 	if (b->length < vb->num_planes || b->length > VIDEO_MAX_PLANES) {
-		printk(KERN_ERR "%s: Incorrect planes array length, "
-			"expected %d, got %d\n", __func__,
-			vb->num_planes, b->length);
+		//printk(KERN_ERR "%s: Incorrect planes array length, "
+		//	"expected %d, got %d\n", __func__,
+		//	vb->num_planes, b->length);
 		return -EINVAL;
 	}
 
@@ -1495,7 +1495,7 @@ static int fimc_open(struct file *filp)
 		ctrl->mem.cpu_addr = dma_alloc_coherent(ctrl->dev,
 					ctrl->mem.size, &(ctrl->mem.base), 0);
 		if (!ctrl->mem.cpu_addr) {
-			printk(KERN_INFO "FIMC%d: dma_alloc_coherent failed\n",
+			//printk(KERN_INFO "FIMC%d: dma_alloc_coherent failed\n",
 								ctrl->id);
 			ret = -ENOMEM;
 			goto dma_alloc_err;
@@ -1958,44 +1958,44 @@ static int fimc_store_log_level(struct device *dev,
 	}
 
 	ctrl->log = 0;
-	printk(KERN_INFO "FIMC.%d log level is set as below.\n", id);
+	//printk(KERN_INFO "FIMC.%d log level is set as below.\n", id);
 
 	if (strstr(msg, "FIMC_LOG_ERR") != NULL) {
 		ctrl->log |= FIMC_LOG_ERR;
 		match = 1;
-		printk(KERN_INFO "\tFIMC_LOG_ERR\n");
+		//printk(KERN_INFO "\tFIMC_LOG_ERR\n");
 	}
 
 	if (strstr(msg, "FIMC_LOG_WARN") != NULL) {
 		ctrl->log |= FIMC_LOG_WARN;
 		match = 1;
-		printk(KERN_INFO "\tFIMC_LOG_WARN\n");
+		//printk(KERN_INFO "\tFIMC_LOG_WARN\n");
 	}
 
 	if (strstr(msg, "FIMC_LOG_INFO_L1") != NULL) {
 		ctrl->log |= FIMC_LOG_INFO_L1;
 		match = 1;
-		printk(KERN_INFO "\tFIMC_LOG_INFO_L1\n");
+		//printk(KERN_INFO "\tFIMC_LOG_INFO_L1\n");
 	}
 
 	if (strstr(msg, "FIMC_LOG_INFO_L2") != NULL) {
 		ctrl->log |= FIMC_LOG_INFO_L2;
 		match = 1;
-		printk(KERN_INFO "\tFIMC_LOG_INFO_L2\n");
+		//printk(KERN_INFO "\tFIMC_LOG_INFO_L2\n");
 	}
 
 	if (strstr(msg, "FIMC_LOG_DEBUG") != NULL) {
 		ctrl->log |= FIMC_LOG_DEBUG;
 		match = 1;
-		printk(KERN_INFO "\tFIMC_LOG_DEBUG\n");
+		//printk(KERN_INFO "\tFIMC_LOG_DEBUG\n");
 	}
 
 	if (!match) {
-		printk(KERN_INFO "FIMC_LOG_ERR	\t: Error condition.\n");
-		printk(KERN_INFO "FIMC_LOG_WARN	\t: WARNING condition.\n");
-		printk(KERN_INFO "FIMC_LOG_INFO_L1 \t: V4L2 API without QBUF, DQBUF.\n");
-		printk(KERN_INFO "FIMC_LOG_INFO_L2 \t: V4L2 API QBUF, DQBUF.\n");
-		printk(KERN_INFO "FIMC_LOG_DEBUG \t: Queue status report.\n");
+		//printk(KERN_INFO "FIMC_LOG_ERR	\t: Error condition.\n");
+		//printk(KERN_INFO "FIMC_LOG_WARN	\t: WARNING condition.\n");
+		//printk(KERN_INFO "FIMC_LOG_INFO_L1 \t: V4L2 API without QBUF, DQBUF.\n");
+		//printk(KERN_INFO "FIMC_LOG_INFO_L2 \t: V4L2 API QBUF, DQBUF.\n");
+		//printk(KERN_INFO "FIMC_LOG_DEBUG \t: Queue status report.\n");
 	}
 
 	return len;
@@ -2051,18 +2051,18 @@ static int fimc_store_range_mode(struct device *dev,
 	}
 
 	ctrl->range = 0;
-	printk(KERN_INFO "FIMC.%d range mode is set as below.\n", id);
+	//printk(KERN_INFO "FIMC.%d range mode is set as below.\n", id);
 
 	if (strstr(msg, "FIMC_RANGE_WIDE") != NULL) {
 		ctrl->range = FIMC_RANGE_WIDE;
 		match = 1;
-		printk(KERN_INFO "\tFIMC_RANGE_WIDE\n");
+		//printk(KERN_INFO "\tFIMC_RANGE_WIDE\n");
 	}
 
 	if (strstr(msg, "FIMC_RANGE_NARROW") != NULL) {
 		ctrl->range = FIMC_RANGE_NARROW;
 		match = 1;
-		printk(KERN_INFO "\tFIMC_RANGE_NARROW\n");
+		//printk(KERN_INFO "\tFIMC_RANGE_NARROW\n");
 	}
 
 	return len;
@@ -2088,7 +2088,7 @@ static int __devinit fimc_probe(struct platform_device *pdev)
 
 	ctrl = fimc_register_controller(pdev);
 	if (!ctrl) {
-		printk(KERN_ERR "%s: cannot register fimc\n", __func__);
+		//printk(KERN_ERR "%s: cannot register fimc\n", __func__);
 		goto err_alloc;
 	}
 
@@ -2138,7 +2138,7 @@ static int __devinit fimc_probe(struct platform_device *pdev)
 		fimc_err("failed to add sysfs entries for range mode\n");
 		goto err_create_file;
 	}
-	printk(KERN_INFO "FIMC%d registered successfully\n", ctrl->id);
+	//printk(KERN_INFO "FIMC%d registered successfully\n", ctrl->id);
 #if (defined(CONFIG_EXYNOS_DEV_PD) && defined(CONFIG_PM_RUNTIME))
 	sprintf(buf, "fimc%d_iqr_wq_name", ctrl->id);
 	ctrl->fimc_irq_wq = create_workqueue(buf);
@@ -2290,7 +2290,7 @@ static inline int fimc_suspend_cap(struct fimc_control *ctrl)
 	struct fimc_global *fimc = get_fimc_dev();
 #if (defined(CONFIG_EXYNOS_DEV_PD) && defined(CONFIG_PM_RUNTIME))
 	struct platform_device *pdev = to_platform_device(ctrl->dev);
-	printk(KERN_INFO "%s\n", __func__);
+	//printk(KERN_INFO "%s\n", __func__);
 	if (ctrl->power_status == FIMC_POWER_ON)
 		pm_runtime_put_sync(&pdev->dev);
 #endif
@@ -2305,7 +2305,7 @@ static inline int fimc_suspend_cap(struct fimc_control *ctrl)
 		if (ctrl->id == FIMC0 && ctrl->cam->initialized) {
 			ctrl->cam->initialized = 0;
 			if (ctrl->cam->use_isp) {
-				printk(KERN_INFO "%s use_isp s_power down\n", __func__);
+				//printk(KERN_INFO "%s use_isp s_power down\n", __func__);
 				v4l2_subdev_call(ctrl->is.sd, core, s_power, 0);
 			} else
 				v4l2_subdev_call(ctrl->cam->sd, core, s_power, 0);
@@ -2320,7 +2320,7 @@ static inline int fimc_suspend_cap(struct fimc_control *ctrl)
 		}
 	}
 	ctrl->power_status = FIMC_POWER_OFF;
-	printk(KERN_INFO "%s--\n", __func__);
+	//printk(KERN_INFO "%s--\n", __func__);
 
 	return 0;
 }
@@ -2335,7 +2335,7 @@ int fimc_suspend(struct platform_device *pdev, pm_message_t state)
 	ctrl = get_fimc_ctrl(id);
 	pdata = to_fimc_plat(ctrl->dev);
 
-	printk(KERN_INFO "%s\n", __func__);
+	//printk(KERN_INFO "%s\n", __func__);
 	if (ctrl->out)
 		fimc_suspend_out(ctrl);
 
@@ -2349,7 +2349,7 @@ int fimc_suspend(struct platform_device *pdev, pm_message_t state)
 		pdata->clk_off(pdev, &ctrl->clk);
 #endif
 
-	printk(KERN_INFO "%s--\n", __func__);
+	//printk(KERN_INFO "%s--\n", __func__);
 	return 0;
 }
 
@@ -2401,7 +2401,7 @@ static inline int fimc_resume_cap(struct fimc_control *ctrl)
 #if (defined(CONFIG_EXYNOS_DEV_PD) && defined(CONFIG_PM_RUNTIME))
 	struct platform_device *pdev = to_platform_device(ctrl->dev);
 #endif
-	printk(KERN_INFO "%s\n", __func__);
+	//printk(KERN_INFO "%s\n", __func__);
 #if (defined(CONFIG_EXYNOS_DEV_PD) && defined(CONFIG_PM_RUNTIME))
 	if (ctrl->power_status == FIMC_POWER_OFF)
 		pm_runtime_get_sync(&pdev->dev);
@@ -2412,7 +2412,7 @@ static inline int fimc_resume_cap(struct fimc_control *ctrl)
 	while ((__raw_readl(S5P_PMU_CAM_CONF + 0x4) & S5P_INT_LOCAL_PWR_EN)
 	       != S5P_INT_LOCAL_PWR_EN) {
 		if (timeout == 0) {
-			printk(KERN_ERR "Power domain CAM enable failed.\n");
+			//printk(KERN_ERR "Power domain CAM enable failed.\n");
 			break;
 		}
 		timeout--;
@@ -2447,7 +2447,7 @@ static inline int fimc_resume_cap(struct fimc_control *ctrl)
 	}
 	/* fimc_streamon_capture((void *)ctrl); */
 	ctrl->power_status = FIMC_POWER_ON;
-	printk(KERN_INFO "%s--\n", __func__);
+	//printk(KERN_INFO "%s--\n", __func__);
 
 	return 0;
 }
@@ -2460,7 +2460,7 @@ int fimc_resume(struct platform_device *pdev)
 
 	ctrl = get_fimc_ctrl(id);
 	pdata = to_fimc_plat(ctrl->dev);
-	printk(KERN_INFO "%s", __func__);
+	//printk(KERN_INFO "%s", __func__);
 	if (atomic_read(&ctrl->in_use) && pdata->clk_on)
 		pdata->clk_on(pdev, &ctrl->clk);
 
@@ -2472,7 +2472,7 @@ int fimc_resume(struct platform_device *pdev)
 	else
 		ctrl->status = FIMC_STREAMOFF;
 
-	printk(KERN_INFO "%s--", __func__);
+	//printk(KERN_INFO "%s--", __func__);
 	return 0;
 }
 
@@ -2498,7 +2498,7 @@ static int fimc_runtime_suspend_cap(struct fimc_control *ctrl)
 {
 	struct platform_device *pdev = to_platform_device(ctrl->dev);
 	struct clk *pxl_async = NULL;
-	printk(KERN_INFO "%s FIMC%d\n", __func__, ctrl->id);
+	//printk(KERN_INFO "%s FIMC%d\n", __func__, ctrl->id);
 
 	ctrl->power_status = FIMC_POWER_SUSPEND;
 
@@ -2534,7 +2534,7 @@ static int fimc_runtime_suspend_cap(struct fimc_control *ctrl)
 		clk_disable(pxl_async);
 		clk_put(pxl_async);
 	}
-	printk(KERN_INFO "%s FIMC%d --\n", __func__, ctrl->id);
+	//printk(KERN_INFO "%s FIMC%d --\n", __func__, ctrl->id);
 
 	return 0;
 }
@@ -2572,7 +2572,7 @@ static int fimc_runtime_resume_cap(struct fimc_control *ctrl)
 {
 	struct platform_device *pdev = to_platform_device(ctrl->dev);
 	struct clk *pxl_async = NULL;
-	printk(KERN_INFO "%s FIMC%d\n", __func__, ctrl->id);
+	//printk(KERN_INFO "%s FIMC%d\n", __func__, ctrl->id);
 
 	if (!ctrl->cam) {
 		fimc_err("%s: No capture device.\n", __func__);
@@ -2600,7 +2600,7 @@ static int fimc_runtime_resume_cap(struct fimc_control *ctrl)
 		clk_enable(pxl_async);
 		clk_put(pxl_async);
 	}
-	printk(KERN_INFO "%s FIMC%d --\n", __func__, ctrl->id);
+	//printk(KERN_INFO "%s FIMC%d --\n", __func__, ctrl->id);
 	return 0;
 }
 static int fimc_runtime_resume(struct device *dev)

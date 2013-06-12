@@ -507,7 +507,7 @@ static int rmnet_usb_ctrl_write(struct rmnet_ctrl_dev *dev, char *buf,
 	}
 	usb_mark_last_busy(udev);
 
-	DUMP_BUFFER("Write: ", size, buf);
+	//DUMP_BUFFER("Write: ", size, buf);
 
 	result = usb_autopm_get_interface(dev->intf);
 	if (result < 0) {
@@ -731,7 +731,7 @@ ctrl_read:
 	kfree(list_elem);
 	DBG("%s: Returning %d bytes to %s\n", __func__, bytes_to_read,
 			dev->name);
-	DUMP_BUFFER("Read: ", bytes_to_read, buf);
+	//DUMP_BUFFER("Read: ", bytes_to_read, buf);
 
 	return bytes_to_read;
 }
