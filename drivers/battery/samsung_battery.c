@@ -1737,7 +1737,7 @@ monitor_finish:
 		(info->cable_type == POWER_SUPPLY_TYPE_BATTERY)) {
 		pr_info("%s: lpm with battery, maybe power off\n", __func__);
 		wake_lock_timeout(&info->monitor_wake_lock,
-					msecs_to_jiffies(10000));
+					msecs_to_jiffies(5000));
 	} else {
 		wake_lock_timeout(&info->monitor_wake_lock,
 					msecs_to_jiffies(1000));
