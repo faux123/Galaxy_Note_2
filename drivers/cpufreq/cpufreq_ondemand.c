@@ -28,6 +28,9 @@
 #include <linux/syscalls.h>
 #include <linux/highuid.h>
 #include <linux/kthread.h>
+#ifdef CONFIG_EARLYSUSPEND
+#include <linux/earlysuspend.h>
+#endif
 
 /* Google systrace just supports Interactive governor (option -l)
  * Just backport Interactive trace points for Ondemand governor use
@@ -75,6 +78,9 @@
 
 static unsigned int min_sampling_rate;
 static unsigned int def_sampling_rate;
+#ifdef CONFIG_EARLYSUSPEND
+static unsigned long stored_sampling_rate;
+#endif
 
 #define LATENCY_MULTIPLIER			(1000)
 #define MIN_LATENCY_MULTIPLIER			(100)
@@ -326,6 +332,62 @@ show_one(ui_counter, ui_counter);
 show_one(ux_freq, ux.freq);
 show_one(ux_loading, ux.loading);
 show_one(ux_boost_threshold, ux.boost_threshold);
+
+/**
+ * update_sampling_rate - update sampling rate effective immediately if needed.
+ * @new_rate: new sampling rate
+ *
+ * If new rate is smaller than the old, simply updaing
+ * dbs_tuners_int.sampling_rate might not be appropriate. For example,
+ * if the original sampling_rate was 1 second and the requested new sampling
+ * rate is 10 ms because the user needs immediate reaction from ondemand
+ * governor, but not sure if higher frequency will be required or not,
+ * then, the governor may change the sampling rate too late; up to 1 second
+ * later. Thus, if we are reducing the sampling rate, we need to make the
+ * new value effective immediately.
+ */
+static void update_sampling_rate(unsigned int new_rate)
+{
+	int cpu;
+
+	dbs_tuners_ins.sampling_rate = new_rate
+				     = max(new_rate, min_sampling_rate);
+
+	for_each_online_cpu(cpu) {
+		struct cpufreq_policy *policy;
+		struct cpu_dbs_info_s *dbs_info;
+		unsigned long next_sampling, appointed_at;
+
+		policy = cpufreq_cpu_get(cpu);
+		if (!policy)
+			continue;
+		dbs_info = &per_cpu(od_cpu_dbs_info, policy->cpu);
+		cpufreq_cpu_put(policy);
+
+		mutex_lock(&dbs_info->timer_mutex);
+
+		if (!delayed_work_pending(&dbs_info->work)) {
+			mutex_unlock(&dbs_info->timer_mutex);
+			continue;
+		}
+
+		next_sampling  = jiffies + usecs_to_jiffies(new_rate);
+		appointed_at = dbs_info->work.timer.expires;
+
+		if (time_before(next_sampling, appointed_at)) {
+
+			mutex_unlock(&dbs_info->timer_mutex);
+			cancel_delayed_work_sync(&dbs_info->work);
+			mutex_lock(&dbs_info->timer_mutex);
+
+			schedule_delayed_work_on(dbs_info->cpu, &dbs_info->work,
+						 usecs_to_jiffies(new_rate));
+
+		}
+		mutex_unlock(&dbs_info->timer_mutex);
+	}
+}
+
 static ssize_t store_sampling_rate(struct kobject *a, struct attribute *b,
 				   const char *buf, size_t count)
 {
@@ -1440,6 +1502,31 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 	return 0;
 }
 
+#ifdef CONFIG_EARLYSUSPEND
+static void cpufreq_ondemand_early_suspend(struct early_suspend *h)
+{
+	mutex_lock(&dbs_mutex);
+	stored_sampling_rate = dbs_tuners_ins.sampling_rate;
+	dbs_tuners_ins.sampling_rate = DEF_SAMPLING_RATE * 6;
+	update_sampling_rate(dbs_tuners_ins.sampling_rate);
+	mutex_unlock(&dbs_mutex);
+}
+
+static void cpufreq_ondemand_late_resume(struct early_suspend *h)
+{
+	mutex_lock(&dbs_mutex);
+	dbs_tuners_ins.sampling_rate = stored_sampling_rate;
+	update_sampling_rate(dbs_tuners_ins.sampling_rate);
+	mutex_unlock(&dbs_mutex);
+}
+
+static struct early_suspend cpufreq_ondemand_early_suspend_info = {
+	.suspend = cpufreq_ondemand_early_suspend,
+	.resume = cpufreq_ondemand_late_resume,
+	.level = EARLY_SUSPEND_LEVEL_DISABLE_FB+1,
+};
+#endif
+
 static int __init cpufreq_gov_dbs_init(void)
 {
 	cputime64_t wall;
@@ -1465,6 +1552,9 @@ static int __init cpufreq_gov_dbs_init(void)
 			MIN_SAMPLING_RATE_RATIO * jiffies_to_usecs(10);
 	}
 	def_sampling_rate = DEF_SAMPLING_RATE;
+#ifdef CONFIG_EARLYSUSPEND
+	register_early_suspend(&cpufreq_ondemand_early_suspend_info);
+#endif
 
 	return cpufreq_register_governor(&cpufreq_gov_ondemand);
 }
@@ -1472,6 +1562,9 @@ static int __init cpufreq_gov_dbs_init(void)
 static void __exit cpufreq_gov_dbs_exit(void)
 {
 	cpufreq_unregister_governor(&cpufreq_gov_ondemand);
+#ifdef CONFIG_EARLYSUSPEND
+	unregister_early_suspend(&cpufreq_ondemand_early_suspend_info);
+#endif
 }
 
 
