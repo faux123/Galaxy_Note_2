@@ -28,7 +28,7 @@
 #include <linux/syscalls.h>
 #include <linux/highuid.h>
 #include <linux/kthread.h>
-#ifdef CONFIG_EARLYSUSPEND
+#if 0 
 #include <linux/earlysuspend.h>
 #endif
 
@@ -78,7 +78,7 @@
 
 static unsigned int min_sampling_rate;
 static unsigned int def_sampling_rate;
-#ifdef CONFIG_EARLYSUSPEND
+#if 0 
 static unsigned long stored_sampling_rate;
 #endif
 
@@ -1502,7 +1502,7 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 	return 0;
 }
 
-#ifdef CONFIG_EARLYSUSPEND
+#if 0
 static void cpufreq_ondemand_early_suspend(struct early_suspend *h)
 {
 	mutex_lock(&dbs_mutex);
@@ -1552,7 +1552,7 @@ static int __init cpufreq_gov_dbs_init(void)
 			MIN_SAMPLING_RATE_RATIO * jiffies_to_usecs(10);
 	}
 	def_sampling_rate = DEF_SAMPLING_RATE;
-#ifdef CONFIG_EARLYSUSPEND
+#if 0
 	register_early_suspend(&cpufreq_ondemand_early_suspend_info);
 #endif
 
@@ -1562,7 +1562,7 @@ static int __init cpufreq_gov_dbs_init(void)
 static void __exit cpufreq_gov_dbs_exit(void)
 {
 	cpufreq_unregister_governor(&cpufreq_gov_ondemand);
-#ifdef CONFIG_EARLYSUSPEND
+#if 0
 	unregister_early_suspend(&cpufreq_ondemand_early_suspend_info);
 #endif
 }
