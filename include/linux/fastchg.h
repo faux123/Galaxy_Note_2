@@ -18,7 +18,7 @@
 #ifndef _LINUX_FASTCHG_H
 #define _LINUX_FASTCHG_H
 
-#define FAST_CHARGE_VERSION "Forced Fast Charge by Yank555.lu v1.2b\n"
+#define FAST_CHARGE_VERSION "Forced Fast Charge by Yank555.lu v1.4\n"
 
 extern int force_fast_charge;
 
@@ -43,6 +43,15 @@ extern int usb_charge_level;
 #define USB_CHARGE_800 800
 #define USB_CHARGE_900 900
 #define USB_CHARGE_1000 1000
+
+extern int wireless_charge_level;
+
+#define WIRELESS_CHARGE_475 475	/* default */
+#define WIRELESS_CHARGE_600 600
+#define WIRELESS_CHARGE_700 700
+#define WIRELESS_CHARGE_800 800
+#define WIRELESS_CHARGE_900 900
+#define WIRELESS_CHARGE_1000 1000
 
 #define MAX_CHARGE_LEVEL 2100	/* Even with failsafe disabled, more is not allowed */
 

@@ -32,6 +32,10 @@
  *
  *   rate at which to charge when on USB (0.475A to 1.0A)
  *
+ * /sys/kernel/fast_charge/wireless_charge_level (r/w)
+ *
+ *   rate at which to charge when on wireless (0.475A to 1.0A)
+ *
  * /sys/kernel/fast_charge/failsafe (rw)
  *
  *   0 - disabled - allow anything up to 2.1A to be used as AC / USB custom current
@@ -203,6 +207,63 @@ static struct attribute_group usb_charge_level_attr_group = {
 .attrs = usb_charge_level_attrs,
 };
 
+/* sysfs interface for "wireless_charge_level" */
+static ssize_t wireless_charge_level_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+{
+	switch (wireless_charge_level) {
+		case WIRELESS_CHARGE_475:	return sprintf(buf, "[475]  600  700  800  900  1000\n");
+		case WIRELESS_CHARGE_600:	return sprintf(buf, "475  [600]  700  800  900  1000\n");
+		case WIRELESS_CHARGE_700:	return sprintf(buf, "475  600  [700]  800  900  1000\n");
+		case WIRELESS_CHARGE_800:	return sprintf(buf, "475  600  700  [800]  900  1000\n");
+		case WIRELESS_CHARGE_900:	return sprintf(buf, "475  600  700  800  [900]  1000\n");
+		case WIRELESS_CHARGE_1000:	return sprintf(buf, "475  600  700  800  900  [1000]\n");
+		default:			return sprintf(buf, "Custom : %dmA\n",wireless_charge_level);
+	}
+}
+
+static ssize_t wireless_charge_level_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count)
+{
+
+	int new_wireless_charge_level;
+
+	sscanf(buf, "%du", &new_wireless_charge_level);
+
+	if (failsafe == FAIL_SAFE_DISABLED && new_wireless_charge_level <= MAX_CHARGE_LEVEL) {
+
+		wireless_charge_level = new_wireless_charge_level;
+		return count;
+
+	}
+
+	else {
+
+		switch (new_wireless_charge_level) {
+			case WIRELESS_CHARGE_475:
+			case WIRELESS_CHARGE_600:
+			case WIRELESS_CHARGE_700:
+			case WIRELESS_CHARGE_800:
+			case WIRELESS_CHARGE_900:
+			case WIRELESS_CHARGE_1000:	wireless_charge_level = new_wireless_charge_level;
+							return count;
+			default:			return count;
+		}
+
+	}
+
+}
+
+static struct kobj_attribute wireless_charge_level_attribute =
+__ATTR(wireless_charge_level, 0666, wireless_charge_level_show, wireless_charge_level_store);
+
+static struct attribute *wireless_charge_level_attrs[] = {
+&wireless_charge_level_attribute.attr,
+NULL,
+};
+
+static struct attribute_group wireless_charge_level_attr_group = {
+.attrs = wireless_charge_level_attrs,
+};
+
 /* sysfs interface for "failsafe" */
 
 int failsafe = FAIL_SAFE_ENABLED;
@@ -280,6 +341,7 @@ int force_fast_charge_init(void)
 	int force_fast_charge_retval;
 	int ac_charge_level_retval;
 	int usb_charge_level_retval;
+	int wireless_charge_level_retval;
 	int failsafe_retval;
 	int version_retval;
 
@@ -292,11 +354,12 @@ int force_fast_charge_init(void)
         force_fast_charge_retval = sysfs_create_group(force_fast_charge_kobj, &force_fast_charge_attr_group);
         ac_charge_level_retval = sysfs_create_group(force_fast_charge_kobj, &ac_charge_level_attr_group);
         usb_charge_level_retval = sysfs_create_group(force_fast_charge_kobj, &usb_charge_level_attr_group);
+        wireless_charge_level_retval = sysfs_create_group(force_fast_charge_kobj, &wireless_charge_level_attr_group);
         failsafe_retval = sysfs_create_group(force_fast_charge_kobj, &failsafe_attr_group);
         version_retval = sysfs_create_group(force_fast_charge_kobj, &version_attr_group);
-        if (force_fast_charge_retval && ac_charge_level_retval && usb_charge_level_retval && failsafe_retval && version_retval)
+        if (force_fast_charge_retval && ac_charge_level_retval && usb_charge_level_retval && wireless_charge_level_retval && failsafe_retval && version_retval)
                 kobject_put(force_fast_charge_kobj);
-        return (force_fast_charge_retval && ac_charge_level_retval && usb_charge_level_retval && failsafe_retval && version_retval);
+        return (force_fast_charge_retval && ac_charge_level_retval && usb_charge_level_retval && wireless_charge_level_retval && failsafe_retval && version_retval);
 }
 /* end sysfs interface */
 
