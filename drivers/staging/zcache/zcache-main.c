@@ -31,6 +31,7 @@
 #include <linux/math64.h>
 #include <linux/crypto.h>
 #include <linux/string.h>
+#include <linux/idr.h>
 #include "tmem.h"
 
 #include "../zsmalloc/zsmalloc.h"
@@ -50,15 +51,13 @@
 	(__GFP_FS | __GFP_NORETRY | __GFP_NOWARN | __GFP_NOMEMALLOC)
 #endif
 
-#define MAX_POOLS_PER_CLIENT 16
-
 #define MAX_CLIENTS 16
 #define LOCAL_CLIENT ((uint16_t)-1)
 
 MODULE_LICENSE("GPL");
 
 struct zcache_client {
-	struct tmem_pool *tmem_pools[MAX_POOLS_PER_CLIENT];
+	struct idr tmem_pools;
 	struct zs_pool *zspool;
 	bool allocated;
 	atomic_t refcount;
@@ -73,6 +72,17 @@ static inline uint16_t get_client_id_from_client(struct zcache_client *cli)
 	if (cli == &zcache_host)
 		return LOCAL_CLIENT;
 	return cli - &zcache_clients[0];
+}
+
+static struct zcache_client *get_zcache_client(uint16_t cli_id)
+{
+	if (cli_id == LOCAL_CLIENT)
+		return &zcache_host;
+
+	if ((unsigned int)cli_id < MAX_CLIENTS)
+		return &zcache_clients[cli_id];
+
+	return NULL;
 }
 
 static inline bool is_local_client(struct zcache_client *cli)
@@ -683,7 +693,7 @@ static unsigned int zv_max_zsize = (PAGE_SIZE / 8) * 7;
 /*
  * byte count defining poor *mean* compression; pages with greater zsize
  * will be rejected until sufficient better-compressed pages are accepted
- * driving the man below this threshold
+ * driving the mean below this threshold
  */
 static unsigned int zv_max_mean_zsize = (PAGE_SIZE / 8) * 5;
 
@@ -750,7 +760,7 @@ static void zv_decompress(struct page *page, unsigned long handle)
 	zv = zs_map_object(zcache_host.zspool, handle, ZS_MM_RO);
 	BUG_ON(zv->size == 0);
 	ASSERT_SENTINEL(zv, ZVH);
-	to_va = kmap_atomic(page, KM_USER0);
+	to_va = kmap_atomic(page);
 	ret = zcache_comp_op(ZCACHE_COMPOP_DECOMPRESS, (char *)zv + sizeof(*zv),
 				zv->size, to_va, &clen);
 	kunmap_atomic(to_va);
@@ -936,21 +946,14 @@ static struct tmem_pool *zcache_get_pool_by_id(uint16_t cli_id, uint16_t poolid)
 	struct tmem_pool *pool = NULL;
 	struct zcache_client *cli = NULL;
 
-	if (cli_id == LOCAL_CLIENT)
-		cli = &zcache_host;
-	else {
-		if (cli_id >= MAX_CLIENTS)
-			goto out;
-		cli = &zcache_clients[cli_id];
-		if (cli == NULL)
-			goto out;
-		atomic_inc(&cli->refcount);
-	}
-	if (poolid < MAX_POOLS_PER_CLIENT) {
-		pool = cli->tmem_pools[poolid];
-		if (pool != NULL)
-			atomic_inc(&pool->refcount);
-	}
+	cli = get_zcache_client(cli_id);
+	if (!cli)
+		goto out;
+
+	atomic_inc(&cli->refcount);
+	pool = idr_find(&cli->tmem_pools, poolid);
+	if (pool != NULL)
+		atomic_inc(&pool->refcount);
 out:
 	return pool;
 }
@@ -968,13 +971,11 @@ static void zcache_put_pool(struct tmem_pool *pool)
 
 int zcache_new_client(uint16_t cli_id)
 {
-	struct zcache_client *cli = NULL;
+	struct zcache_client *cli;
 	int ret = -1;
 
-	if (cli_id == LOCAL_CLIENT)
-		cli = &zcache_host;
-	else if ((unsigned int)cli_id < MAX_CLIENTS)
-		cli = &zcache_clients[cli_id];
+	cli = get_zcache_client(cli_id);
+
 	if (cli == NULL)
 		goto out;
 	if (cli->allocated)
@@ -984,6 +985,7 @@ int zcache_new_client(uint16_t cli_id)
 	cli->zspool = zs_create_pool("zcache", ZCACHE_GFP_MASK);
 	if (cli->zspool == NULL)
 		goto out;
+	idr_init(&cli->tmem_pools);
 #endif
 	ret = 0;
 out:
@@ -1249,13 +1251,12 @@ static int zcache_pampd_get_data_and_free(char *data, size_t *bufsize, bool raw,
 					void *pampd, struct tmem_pool *pool,
 					struct tmem_oid *oid, uint32_t index)
 {
-	int ret = 0;
-
 	BUG_ON(!is_ephemeral(pool));
-	zbud_decompress((struct page *)(data), pampd);
+	if (zbud_decompress((struct page *)(data), pampd) < 0)
+		return -EINVAL;
 	zbud_free_and_delist((struct zbud_hdr *)pampd);
 	atomic_dec(&zcache_curr_eph_pampd_count);
-	return ret;
+	return 0;
 }
 
 /*
@@ -1650,22 +1651,21 @@ static int zcache_flush_object(int cli_id, int pool_id,
 static int zcache_destroy_pool(int cli_id, int pool_id)
 {
 	struct tmem_pool *pool = NULL;
-	struct zcache_client *cli = NULL;
+	struct zcache_client *cli;
 	int ret = -1;
 
 	if (pool_id < 0)
 		goto out;
-	if (cli_id == LOCAL_CLIENT)
-		cli = &zcache_host;
-	else if ((unsigned int)cli_id < MAX_CLIENTS)
-		cli = &zcache_clients[cli_id];
+
+	cli = get_zcache_client(cli_id);
 	if (cli == NULL)
 		goto out;
+
 	atomic_inc(&cli->refcount);
-	pool = cli->tmem_pools[pool_id];
+	pool = idr_find(&cli->tmem_pools, pool_id);
 	if (pool == NULL)
 		goto out;
-	cli->tmem_pools[pool_id] = NULL;
+	idr_remove(&cli->tmem_pools, pool_id);
 	/* wait for pool activity on other cpus to quiesce */
 	while (atomic_read(&pool->refcount) != 0)
 		;
@@ -1685,34 +1685,38 @@ static int zcache_new_pool(uint16_t cli_id, uint32_t flags)
 	int poolid = -1;
 	struct tmem_pool *pool;
 	struct zcache_client *cli = NULL;
+	int r;
 
-	if (cli_id == LOCAL_CLIENT)
-		cli = &zcache_host;
-	else if ((unsigned int)cli_id < MAX_CLIENTS)
-		cli = &zcache_clients[cli_id];
+	cli = get_zcache_client(cli_id);
 	if (cli == NULL)
 		goto out;
+
 	atomic_inc(&cli->refcount);
-	pool = kmalloc(sizeof(struct tmem_pool), GFP_KERNEL);
+	pool = kmalloc(sizeof(struct tmem_pool), GFP_ATOMIC);
 	if (pool == NULL) {
 		pr_info("zcache: pool creation failed: out of memory\n");
 		goto out;
 	}
 
-	for (poolid = 0; poolid < MAX_POOLS_PER_CLIENT; poolid++)
-		if (cli->tmem_pools[poolid] == NULL)
-			break;
-	if (poolid >= MAX_POOLS_PER_CLIENT) {
-		pr_info("zcache: pool creation failed: max exceeded\n");
+	do {
+		r = idr_pre_get(&cli->tmem_pools, GFP_ATOMIC);
+		if (r != 1) {
+			kfree(pool);
+			pr_info("zcache: pool creation failed: out of memory\n");
+			goto out;
+		}
+		r = idr_get_new(&cli->tmem_pools, pool, &poolid);
+	} while (r == -EAGAIN);
+	if (r) {
+		pr_info("zcache: pool creation failed: error %d\n", r);
 		kfree(pool);
-		poolid = -1;
 		goto out;
 	}
+
 	atomic_set(&pool->refcount, 0);
 	pool->client = cli;
 	pool->pool_id = poolid;
 	tmem_new_pool(pool, flags);
-	cli->tmem_pools[poolid] = pool;
 	pr_info("zcache: created %s tmem pool, id=%d, client=%d\n",
 		flags & TMEM_POOL_PERSIST ? "persistent" : "ephemeral",
 		poolid, cli_id);
@@ -1824,7 +1828,7 @@ static int zcache_frontswap_poolid = -1;
  * Swizzling increases objects per swaptype, increasing tmem concurrency
  * for heavy swaploads.  Later, larger nr_cpus -> larger SWIZ_BITS
  * Setting SWIZ_BITS to 27 basically reconstructs the swap entry from
- * frontswap_get_page(), but has side-effects. Hence using 8.
+ * frontswap_load(), but has side-effects. Hence using 8.
  */
 #define SWIZ_BITS		8
 #define SWIZ_MASK		((1 << SWIZ_BITS) - 1)
@@ -1838,7 +1842,7 @@ static inline struct tmem_oid oswiz(unsigned type, u32 ind)
 	return oid;
 }
 
-static int zcache_frontswap_put_page(unsigned type, pgoff_t offset,
+static int zcache_frontswap_store(unsigned type, pgoff_t offset,
 				   struct page *page)
 {
 	u64 ind64 = (u64)offset;
@@ -1859,7 +1863,7 @@ static int zcache_frontswap_put_page(unsigned type, pgoff_t offset,
 
 /* returns 0 if the page was successfully gotten from frontswap, -1 if
  * was not present (should never happen!) */
-static int zcache_frontswap_get_page(unsigned type, pgoff_t offset,
+static int zcache_frontswap_load(unsigned type, pgoff_t offset,
 				   struct page *page)
 {
 	u64 ind64 = (u64)offset;
@@ -1908,8 +1912,8 @@ static void zcache_frontswap_init(unsigned ignored)
 }
 
 static struct frontswap_ops zcache_frontswap_ops = {
-	.put_page = zcache_frontswap_put_page,
-	.get_page = zcache_frontswap_get_page,
+	.store = zcache_frontswap_store,
+	.load = zcache_frontswap_load,
 	.invalidate_page = zcache_frontswap_flush_page,
 	.invalidate_area = zcache_frontswap_flush_area,
 	.init = zcache_frontswap_init
@@ -2063,7 +2067,7 @@ static int __init zcache_init(void)
 		pr_info("zcache: frontswap enabled using kernel "
 			"transcendent memory and zsmalloc\n");
 		if (old_ops.init != NULL)
-			pr_warning("ktmem: frontswap_ops overridden");
+			pr_warning("zcache: frontswap_ops overridden");
 	}
 #endif
 out:
