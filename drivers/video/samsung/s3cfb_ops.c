@@ -1865,7 +1865,7 @@ static int s3c_fb_set_win_config(struct s3cfb_global *fbdev,
 	struct s3c_reg_data *regs;
 	struct sync_fence *fence;
 	struct sync_pt *pt;
-	int fd;
+	int fd = 0;
 
 	if (fbdev->support_fence == FENCE_SUPPORT)
 	fd = get_unused_fd();
