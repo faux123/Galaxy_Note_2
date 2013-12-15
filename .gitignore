@@ -79,3 +79,17 @@ GTAGS
 *.orig
 *~
 \#*#
+
+# add user ignores
+att-jb-mkzip.sh
+att-boot.img-ramdisk
+att-ramdisk.gz
+boot.img-ramdisk
+jb-tw-mkzip.sh
+ramdisk.gz
+out_att
+out
+out_vzw
+vzw-boot.img-ramdisk
+vzw-jb-mkzip.sh
+vzw-ramdisk.gz
