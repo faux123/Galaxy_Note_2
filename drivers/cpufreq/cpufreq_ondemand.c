@@ -927,13 +927,13 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
                 }
             }
 
-            /* NEVER less than current speed */
-            if (debug_freq < policy->cur)
-                if (debug_load > DEF_TWO_PHASE_GO_MAX_LOAD)
-                    debug_freq = policy->max;
-                else
-                    debug_freq = policy->cur;
-
+	/* NEVER less than current speed */
+	if (debug_freq < policy->cur) {
+		if (debug_load > DEF_TWO_PHASE_GO_MAX_LOAD)
+			debug_freq = policy->max;
+		else
+			debug_freq = policy->cur;
+	}
         /* busy phase */
 		} else {
             debug_freq = policy->max;
