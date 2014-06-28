@@ -270,5 +270,3 @@ disp-$(CONFIG_OMAP2_DSS)		:= display.o
 obj-y					+= $(disp-m) $(disp-y)
 
 obj-y					+= common-board-devices.o
-obj-$(CONFIG_RQ_STATS)			+= rq_stats.o
-
