@@ -444,8 +444,6 @@ obj-$(CONFIG_SND_SOC_SAMSUNG_WATCH_YMU831)	+= watch-sound-y.o
 # for audio platform data driver
 obj-$(CONFIG_EXYNOS_SOUND_PLATFORM_DATA)	+= exynos_sound_platform_data.o
 
-obj-$(CONFIG_INTELLI_PLUG) += intelli_plug.o
-
 ifeq ($(CONFIG_GPS_BCMxxxxx),y)
 obj-$(CONFIG_GPS_BCM47511)		+= sec_gps_bcm47511.o
 obj-$(CONFIG_GPS_BCM4752)		+= sec_gps_bcm4752.o
